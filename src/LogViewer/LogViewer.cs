@@ -24,6 +24,7 @@ namespace Bluehands.Repository.Diagnostics
         public bool Highlighted { get; set; }
         public int LineNr { get; set; }
         public int TraceIndentLevel { get; set; }
+        public StringBuilder RawMessage { get; } = new StringBuilder();
     }
 
     public class LogFileInfo : IDisposable
@@ -224,32 +225,6 @@ namespace Bluehands.Repository.Diagnostics
             var logParser = new LogParser(FormatProviderFactory.GetLineConverter(lines, m_LogFormatProvider));
 
             destination.AddRange(logParser.ParseLines(lines, filename, m_AllItems.Count));
-
-            //var currentIndentionLevel = 0;
-            //var previousLineCount = m_AllItems.Count;
-            //var lineNr = 1;
-            //LogListViewItem item = null;
-            //foreach (var t in lines)
-            //{
-            //    bool succeeded;
-            //    if (!m_LogFormatProvider.IsNewLogLine(t))
-            //    {
-            //        if (item != null && t != null && !string.IsNullOrEmpty(t.Trim()))
-            //        {
-            //            item.Message = string.Concat(item.Message, Environment.NewLine, t);
-            //        }
-            //        continue;
-            //    }
-            //    item = ParseLogLine(t, ref currentIndentionLevel, out succeeded);
-            //    if (succeeded)
-            //    {
-            //        item.LineNr = previousLineCount + lineNr;
-            //        item.Filename = filename;
-            //        item.Highlighted = false;
-            //        destination.Add(item);
-            //        ++lineNr;
-            //    }
-            //}
         }
 
         void AddVisibleItems(List<LogListViewItem> items)
@@ -496,7 +471,7 @@ namespace Bluehands.Repository.Diagnostics
             return true;
         }
 
-        bool MatchesCurrentFilter(LogListViewItem item) => m_Filters.Matches(item);
+        public bool MatchesCurrentFilter(LogListViewItem item) => m_Filters.Matches(item);
 
         bool MatchesCurrentLineNrFilter(LogListViewItem item) => item.LineNr >= m_MinVisibleLineNr && item.LineNr <= m_MaxVisibleLineNr;
 
@@ -576,7 +551,7 @@ namespace Bluehands.Repository.Diagnostics
         public LogParser(ILogFormatProvider logFormatProvider) => m_LogFormatProvider = logFormatProvider;
 
 
-        public IEnumerable<LogListViewItem> ParseLines(IEnumerable<string> lines, string filename, int currentLineCount = 0)
+        public IEnumerable<LogListViewItem> ParseLines(IEnumerable<string> lines, string filename, int currentLineCount = 0, bool includeRaw = false)
         {
             var currentIndentionLevel = 0;
             var previousLineCount = currentLineCount;
@@ -589,10 +564,12 @@ namespace Bluehands.Repository.Diagnostics
                     if (item != null && t != null && !string.IsNullOrEmpty(t.Trim()))
                     {
                         item.Message = string.Concat(item.Message, Environment.NewLine, t);
+                        if (includeRaw) item.RawMessage.Append(t);
                     }
                     continue;
                 }
                 item = ParseLogLine(t, ref currentIndentionLevel, out var succeeded);
+                if (includeRaw) item.RawMessage.Append(t);
                 if (succeeded)
                 {
                     item.LineNr = previousLineCount + lineNr;

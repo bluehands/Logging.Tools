@@ -12,6 +12,7 @@ using System.IO;
 using System.Reflection;
 using Application = System.Windows.Forms.Application;
 using DragEventArgs = System.Windows.DragEventArgs;
+using MessageBox = System.Windows.Forms.MessageBox;
 using Point = System.Drawing.Point;
 
 namespace Bluehands.Repository.Diagnostics
@@ -106,13 +107,13 @@ namespace Bluehands.Repository.Diagnostics
 
         private void AdaptLastColumnWidth(GridView gridView)
         {
-            int widthOfLeftColmuns = 0;
+            int widthOfLeftColumns = 0;
             for (int i = 0; i < gridView.Columns.Count - 1; i++)
             {
-                widthOfLeftColmuns += (int)tabLayout.ColumnStyles[i].Width;
+                widthOfLeftColumns += (int)tabLayout.ColumnStyles[i].Width;
             }
 
-            int desiredSizeOfLastColumn = Width - widthOfLeftColmuns - 40;
+            int desiredSizeOfLastColumn = Width - widthOfLeftColumns - 40;
 
             if (desiredSizeOfLastColumn > 0)
             {
@@ -169,9 +170,7 @@ namespace Bluehands.Repository.Diagnostics
             {
                 var selectedLineNr = m_LogViewer.VisibleItems[lmListView.ListView.SelectedIndex].LineNr;
                 var correspondingLineNr = m_LogViewer.VisibleItems[correspondingIndex].LineNr;
-                txtLineNr.Text = string.Format("{0}, {1}",
-                                               Math.Min(selectedLineNr, correspondingLineNr),
-                                               Math.Max(selectedLineNr, correspondingLineNr));
+                txtLineNr.Text = $@"{Math.Min(selectedLineNr, correspondingLineNr)}, {Math.Max(selectedLineNr, correspondingLineNr)}";
             }
         }
 
@@ -189,7 +188,7 @@ namespace Bluehands.Repository.Diagnostics
             var selectedItems = from object selectedItem in lmListView.ListView.SelectedItems
                                 select lmListView.ListView.Items.IndexOf(selectedItem)
                                     into index
-                                    select m_LogViewer.VisibleItems[index].LineNr;
+                                select m_LogViewer.VisibleItems[index].LineNr;
 
             var analyzer = new ThreadAnalyzerForm(selectedItems, m_LogViewer);
             analyzer.ShowDialog(this);
@@ -536,11 +535,6 @@ namespace Bluehands.Repository.Diagnostics
             Settings.Default.HideInfoColumns = toggleShowInfoColumnsToolStripMenuItem.Checked;
         }
 
-        private void WatchForNewestFileCheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void ThreadAnalyzerToolStripMenuItemClick(object sender, EventArgs e)
         {
             ShowThreadAnalyzer();
@@ -641,6 +635,33 @@ namespace Bluehands.Repository.Diagnostics
         {
             public string SearchPattern { get; set; }
             public int RunTimeInMs { get; set; }
+        }
+
+        void MergeFilesWithCurrentFilterClick(object sender, EventArgs e)
+        {
+            try
+            {
+                var logFiles = GetLogFileNames().OrderBy(s => s).ToList();
+                if (!logFiles.Any())
+                    return;
+
+                // ReSharper disable once AssignNullToNotNullAttribute
+                var outputFile = Path.Combine(Path.GetDirectoryName(logFiles[0]), Path.GetFileNameWithoutExtension(logFiles[0]) + "_merged.log");
+                if (File.Exists(outputFile))
+                    File.Delete(outputFile);
+
+                foreach (var logFile in logFiles)
+                {
+                    var lines = File.ReadLines(logFile).ToList();
+                    var logParser = new LogParser(FormatProviderFactory.GetLineConverter(lines, null));
+                    var parsedLines = logParser.ParseLines(lines, logFile, includeRaw: true);
+                    File.AppendAllLines(outputFile, parsedLines.Where(m_LogViewer.MatchesCurrentFilter).Select(l => l.RawMessage.ToString()));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($@"Failed: {ex}", @"Error");
+            }
         }
     }
 }
