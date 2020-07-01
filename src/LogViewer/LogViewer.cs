@@ -13,73 +13,6 @@ using static Bluehands.Repository.Diagnostics.LogFilters;
 
 namespace Bluehands.Repository.Diagnostics
 {
-    public class LogFilters
-    {
-        public const string DefaultFilterString = ".*";
-        static readonly ColumnFilter s_MatchAllFilter = new ColumnFilter(DefaultFilterString, MatchAll);
-        static bool MatchAll(LogListViewItem _) => true;
-        readonly Dictionary<LogViewer.LogColumnType, ColumnFilter> m_Filters = new Dictionary<LogViewer.LogColumnType, ColumnFilter>();
-
-        public LogFilters()
-        {
-            foreach (LogViewer.LogColumnType value in Enum.GetValues(typeof(LogViewer.LogColumnType)))
-            {
-                m_Filters[value] = s_MatchAllFilter;
-            }
-        }
-
-        public bool Matches(LogListViewItem item) => m_Filters.Values.All(f => f.Matches(item));
-
-        public Func<LogListViewItem, bool> GetMatcher(LogViewer.LogColumnType column) => m_Filters[column].Matches;
-
-        static Func<LogListViewItem, string> MakeLineAccess(LogViewer.LogColumnType column)
-        {
-            switch (column)
-            {
-                case LogViewer.LogColumnType.LineNr:
-                    return l => l.LineNr.ToString();
-                case LogViewer.LogColumnType.Filename:
-                    return l => l.Filename;
-                case LogViewer.LogColumnType.ThreadId:
-                    return l => l.ThreadId;
-                case LogViewer.LogColumnType.Instance:
-                    return l => l.Instance;
-                case LogViewer.LogColumnType.Time:
-                    return l => l.Time;
-                case LogViewer.LogColumnType.Level:
-                    return l => l.Level;
-                case LogViewer.LogColumnType.Message:
-                    return l => l.Message;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(column), column, null);
-            }
-        }
-
-        class ColumnFilter
-        {
-            public string FilterString { get; }
-            public Func<LogListViewItem, bool> Matches { get; }
-
-            public ColumnFilter(string filterString, Func<LogListViewItem, bool> matches)
-            {
-                FilterString = filterString;
-                Matches = matches;
-            }
-        }
-
-        public void SetRegexFilter(LogViewer.LogColumnType column, string pattern)
-        {
-            var access = MakeLineAccess(column);
-            var regex = new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var filter = new ColumnFilter(pattern, l => regex.IsMatch(access(l) ?? string.Empty));
-            m_Filters[column] = filter;
-        }
-
-        public void ResetColumnFilter(LogViewer.LogColumnType column) => m_Filters[column] = s_MatchAllFilter;
-
-        public string CurrentFilterString(LogViewer.LogColumnType column) => m_Filters[column].FilterString;
-    }
-
     public class LogListViewItem
     {
         public string Filename { get; set; }
@@ -91,17 +24,6 @@ namespace Bluehands.Repository.Diagnostics
         public bool Highlighted { get; set; }
         public int LineNr { get; set; }
         public int TraceIndentLevel { get; set; }
-    }
-
-    public class Pair<T1, T2>
-    {
-        public T1 First { get; set; }
-        public T2 Second { get; set; }
-        public Pair(T1 first, T2 second)
-        {
-            First = first;
-            Second = second;
-        }
     }
 
     public class LogFileInfo : IDisposable
@@ -202,7 +124,7 @@ namespace Bluehands.Repository.Diagnostics
         int m_MinVisibleLineNr = int.MinValue;
 
         bool m_IndentionOn;
-        const char c_IndentChar = '-';
+        const char IndentChar = '-';
 
         ILogFormatProvider m_LogFormatProvider;
 
@@ -231,8 +153,7 @@ namespace Bluehands.Repository.Diagnostics
 
             foreach (var info in logFileInfos)
             {
-                bool isReload;
-                var lines = info.Read(out isReload);
+                var lines = info.Read(out var isReload);
                 if (lines == null)
                 {
                     m_LastError = "Error reading file (" + info.File.FullName + ")";
@@ -267,10 +188,7 @@ namespace Bluehands.Repository.Diagnostics
             RememberCurrentlyOpenedFiles();
         }
 
-        public LogViewerState LoadState()
-        {
-            return m_StatePersister.Load();
-        }
+        public LogViewerState LoadState() => m_StatePersister.Load();
 
         void RememberCurrentlyOpenedFiles()
         {
@@ -452,57 +370,58 @@ namespace Bluehands.Repository.Diagnostics
 
         public void FilterColumn(LogColumnType column, string pattern)
         {
-            var limitingSearch = false;
-            if (string.IsNullOrEmpty(pattern))
+            var currentFilterString = m_Filters.CurrentFilterString(column);
+            if (pattern == currentFilterString) return;
+
+            if (pattern == NegationPrefix) pattern = DefaultFilterString;
+            //negated all matches nothing. User is about to exclude more less...
+            else if (pattern.StartsWith(NegationPrefix) && pattern.EndsWith("|")) return;
+
+            if (!m_Filters.TrySetFilter(column, pattern))
             {
-                m_Filters.ResetColumnFilter(column);
-            }
-            else
-            {
-                var currentFilterString = m_Filters.CurrentFilterString(column);
-                if (currentFilterString == DefaultFilterString)
-                {
-                    limitingSearch = true;
-                }
-                else if (column == LogColumnType.LineNr)
-                {
-                }
-                else if (pattern.StartsWith(currentFilterString))
-                {
-                    //check newly typed string for regex metacharacters
-                    if (currentFilterString.Length < pattern.Length)
-                    {
-                        var newString = pattern.Substring(currentFilterString.Length);
-                        if (Regex.Escape(newString).Length == newString.Length)
-                        {
-                            limitingSearch = true;
-                        }
-                    }
-                    //new search string is identical with the old one-> nothing to to here
-                    else
-                    {
-                        return;
-                    }
-                }
-                if (IsValidPattern(pattern))
-                {
-                    m_Filters.SetRegexFilter(column, pattern);
-                }
-                else
-                {
-                    return;
-                }
+                return;
             }
 
+            var limitingSearch = IsLimitingSearch(column, pattern, currentFilterString);
             if (!limitingSearch)
             {
                 ReloadItemsWithCurrentFilter(m_Filters.Matches, m_AllItems);
             }
             else
             {
-                Func<LogListViewItem, bool> matcher = m_Filters.GetMatcher(column);
-                ReloadItemsWithCurrentFilter(matcher, VisibleItems);
+                ReloadItemsWithCurrentFilter(m_Filters.GetMatcher(column), VisibleItems);
             }
+        }
+
+        static bool IsLimitingSearch(LogColumnType column, string pattern, string currentFilterString)
+        {
+            if (string.IsNullOrEmpty(pattern)) return false;
+
+            if (pattern.StartsWith(NegationPrefix))
+            {
+                return false;
+            }
+
+            if (column == LogColumnType.LineNr)
+            {
+                return false;
+            }
+
+            if (currentFilterString == DefaultFilterString)
+            {
+                return true;
+            }
+
+            if (pattern.StartsWith(currentFilterString) && currentFilterString.Length < pattern.Length)
+            {
+                var newString = pattern.Substring(currentFilterString.Length);
+                if (Regex.Escape(newString).Length == newString.Length)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         void ReloadItemsWithCurrentFilter(Func<LogListViewItem, bool> matcher, IEnumerable<LogListViewItem> source)
@@ -531,7 +450,7 @@ namespace Bluehands.Repository.Diagnostics
         {
             foreach (var item in m_AllItems)
             {
-                item.Message = item.Message.TrimStart(c_IndentChar);
+                item.Message = item.Message.TrimStart(IndentChar);
             }
         }
 
@@ -539,24 +458,8 @@ namespace Bluehands.Repository.Diagnostics
         {
             foreach (var item in m_AllItems)
             {
-                item.Message = item.Message.PadLeft(2 * item.TraceIndentLevel + item.Message.Length, c_IndentChar);
+                item.Message = item.Message.PadLeft(2 * item.TraceIndentLevel + item.Message.Length, IndentChar);
             }
-        }
-
-        static bool IsValidPattern(string pattern)
-        {
-            var validPattern = true;
-            try
-            {
-                // ReSharper disable ReturnValueOfPureMethodIsNotUsed
-                Regex.IsMatch("lskdfjl", pattern);
-                // ReSharper restore ReturnValueOfPureMethodIsNotUsed
-            }
-            catch
-            {
-                validPattern = false;
-            }
-            return validPattern;
         }
 
         public bool SetLineNrLimits(string limits)
@@ -595,10 +498,7 @@ namespace Bluehands.Repository.Diagnostics
 
         bool MatchesCurrentFilter(LogListViewItem item) => m_Filters.Matches(item);
 
-        bool MatchesCurrentLineNrFilter(LogListViewItem item)
-        {
-            return (item.LineNr >= m_MinVisibleLineNr) && (item.LineNr <= m_MaxVisibleLineNr);
-        }
+        bool MatchesCurrentLineNrFilter(LogListViewItem item) => item.LineNr >= m_MinVisibleLineNr && item.LineNr <= m_MaxVisibleLineNr;
 
         public int GetCorrespondingVisibleIndex(int index)
         {

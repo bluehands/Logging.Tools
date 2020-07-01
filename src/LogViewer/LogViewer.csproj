@@ -124,6 +124,7 @@
     <Compile Include="FormatProviders\LogBackendFormatProvider.cs" />
     <Compile Include="FormatProviders\LogCurrentFormatProvider.cs" />
     <Compile Include="FormatProviders\LogFormatProviderBase.cs" />
+    <Compile Include="LogFilters.cs" />
     <Compile Include="LogItemDetailView.cs">
       <SubType>Form</SubType>
     </Compile>
