@@ -54,7 +54,7 @@
                   <GridViewColumn.CellTemplate> 
                     <DataTemplate>
                        <!--<TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>-->
-                       <TextBox Padding="0" BorderThickness="0" IsReadOnly="True" Text="{Binding Message, Mode=OneTime}" TextWrapping="Wrap" IsReadOnlyCaretVisible="True" />
+                       <TextBox Padding="0" BorderThickness="0" IsReadOnly="True" Text="{Binding Message, Mode=OneTime}" Diagnostics:TextBoxHelper.SelectedText="{Binding SelectedText}" TextWrapping="Wrap" IsReadOnlyCaretVisible="True" />
                     </DataTemplate> 
                   </GridViewColumn.CellTemplate>
                 </GridViewColumn>

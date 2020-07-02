@@ -322,16 +322,17 @@ namespace Bluehands.Repository.Diagnostics
             var existing = Application.OpenForms.OfType<FindDialog>().FirstOrDefault();
             if (existing != null)
             {
+                existing.SetPattern(GetSelectedText());
                 existing.BringToFront();
                 return;
             }
-
 
             var dlg = new FindDialog(
                 c => ProcessSearch(c),
                 c => m_LogViewer.CountItems(c),
                 backwards => SelectNextHighlightedItem(backwards)
                 );
+            dlg.SetPattern(GetSelectedText());
             dlg.Show(this);
         }
 
@@ -442,6 +443,8 @@ namespace Bluehands.Repository.Diagnostics
                 }
             } while (index != startIndex);
         }
+
+        public string GetSelectedText() => TextBoxHelper.LastSelected;
 
         int GetStartIndex()
         {

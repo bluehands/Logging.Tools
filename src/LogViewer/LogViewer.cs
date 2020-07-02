@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using Bluehands.Repository.Diagnostics.Properties;
 using static Bluehands.Repository.Diagnostics.LogFilters;
+using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace Bluehands.Repository.Diagnostics
 {
@@ -25,6 +26,7 @@ namespace Bluehands.Repository.Diagnostics
         public int LineNr { get; set; }
         public int TraceIndentLevel { get; set; }
         public StringBuilder RawMessage { get; } = new StringBuilder();
+        public string SelectedText { get; set; } = "";
     }
 
     public class LogFileInfo : IDisposable

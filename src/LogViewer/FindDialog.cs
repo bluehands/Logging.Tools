@@ -10,8 +10,8 @@ namespace Bluehands.Repository.Diagnostics
         readonly Func<Option<FindCommand>, int> m_DoSearch;
         readonly Func<FindCommand, int> m_DoCount;
         readonly Action<bool> m_Highlight;
-        public string Pattern = string.Empty;
-        public int RunTimeInMs = int.MinValue;
+        public string Pattern { get; set; } = string.Empty;
+        public int RunTimeInMs { get; set; } = int.MinValue;
 
         public FindDialog(Func<Option<FindCommand>, int> doSearch, Func<FindCommand, int> doCount, Action<bool> highlight)
         {
@@ -19,6 +19,11 @@ namespace Bluehands.Repository.Diagnostics
             m_DoCount = doCount;
             m_Highlight = highlight;
             InitializeComponent();
+        }
+
+        public void SetPattern(string pattern)
+        {
+            txtPattern.Text = pattern;
         }
 
         void TxtPattern_TextChanged(object sender, EventArgs e)
@@ -43,9 +48,14 @@ namespace Bluehands.Repository.Diagnostics
 
         void TxtRuntime_TextChanged(object sender, EventArgs e)
         {
-            if (!int.TryParse(txtRunTime.Text, out RunTimeInMs))
+
+            if (!int.TryParse(txtRunTime.Text, out var ms))
             {
                 RunTimeInMs = int.MinValue;
+            }
+            else
+            {
+                RunTimeInMs = ms;
             }
         }
 
@@ -63,7 +73,7 @@ namespace Bluehands.Repository.Diagnostics
 
         void DisplayCount(int count)
         {
-            lblMessage.Text = $@"Hits: {count}";
+            lblMessage.Text = $@"{count} hits";
         }
 
         Option<FindCommand> GetCommand()
