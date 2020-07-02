@@ -48,13 +48,18 @@
                 <GridViewColumn Width="131" Header="Filename" DisplayMemberBinding="{Binding Filename}"/>
                 <GridViewColumn Width="67" Header="ThreadId" DisplayMemberBinding="{Binding ThreadId}"/>
                 <GridViewColumn Width="91" Header="Instance" DisplayMemberBinding="{Binding Instance}"/>
-                <GridViewColumn Width="144" Header="Time" DisplayMemberBinding="{Binding Time}"/>
+                <GridViewColumn Width="144" Header="Time">
+                    <GridViewColumn.CellTemplate> 
+                        <DataTemplate>
+                            <TextBox Padding="0" BorderThickness="0" IsReadOnly="True" Text="{Binding Time, Mode=OneTime}" IsReadOnlyCaretVisible="True" />
+                        </DataTemplate> 
+                    </GridViewColumn.CellTemplate>
+                </GridViewColumn>
                 <GridViewColumn Width="48" Header="Level" DisplayMemberBinding="{Binding Level}"/>
                 <GridViewColumn Width="1600" Header="Module / Message">
                   <GridViewColumn.CellTemplate> 
                     <DataTemplate>
-                       <!--<TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>-->
-                       <TextBox Padding="0" BorderThickness="0" IsReadOnly="True" Text="{Binding Message, Mode=OneTime}" Diagnostics:TextBoxHelper.SelectedText="{Binding SelectedText}" TextWrapping="Wrap" IsReadOnlyCaretVisible="True" />
+                       <TextBox Padding="0" BorderThickness="0" IsReadOnly="True" Text="{Binding Message, Mode=OneTime}" Diagnostics:TextBoxHelper.SelectedText="{Binding SelectedText, Mode=OneWay}" TextWrapping="Wrap" IsReadOnlyCaretVisible="True" />
                     </DataTemplate> 
                   </GridViewColumn.CellTemplate>
                 </GridViewColumn>
