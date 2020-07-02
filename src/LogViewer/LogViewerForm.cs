@@ -10,6 +10,8 @@ using Bluehands.Repository.Diagnostics.Properties;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
+using FunicularSwitch;
 using Application = System.Windows.Forms.Application;
 using DragEventArgs = System.Windows.DragEventArgs;
 using MessageBox = System.Windows.Forms.MessageBox;
@@ -22,11 +24,11 @@ namespace Bluehands.Repository.Diagnostics
         public delegate void ListViewItemParameterDelegate(LogListViewItem item);
         public delegate void NoParameterDelegate();
 
-        private readonly LogViewer m_LogViewer;
-        private readonly Timer m_ScrollDownTimer;
+        readonly LogViewer m_LogViewer;
+        readonly Timer m_ScrollDownTimer;
 
-        private string m_StartUpFile;
-        private string m_LogFilePath;
+        string m_StartUpFile;
+        string m_LogFilePath;
 
         public LogViewerForm(string startUpFile)
         {
@@ -49,7 +51,7 @@ namespace Bluehands.Repository.Diagnostics
             m_ScrollDownTimer.Tick += ScrollDownTimerTick;
         }
 
-        private static void LogViewerFormClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        static void LogViewerFormClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Settings.Default.Save();
         }
@@ -65,7 +67,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void SetTitle(string files)
+        void SetTitle(string files)
         {
             var assembly = Assembly.GetAssembly(GetType());
             Text = !string.IsNullOrEmpty(files)
@@ -83,7 +85,7 @@ namespace Bluehands.Repository.Diagnostics
             ResizeFilterTextboxes();
         }
 
-        private void ResizeFilterTextboxes()
+        void ResizeFilterTextboxes()
         {
             var gridView = lmListView.ListView.View as GridView;
             if (gridView != null)
@@ -105,7 +107,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void AdaptLastColumnWidth(GridView gridView)
+        void AdaptLastColumnWidth(GridView gridView)
         {
             int widthOfLeftColumns = 0;
             for (int i = 0; i < gridView.Columns.Count - 1; i++)
@@ -121,8 +123,9 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private readonly Dictionary<int, double> m_ColumnWidthsBeforeHide = new Dictionary<int, double>();
-        private void ToggleShowInfoColumns()
+        readonly Dictionary<int, double> m_ColumnWidthsBeforeHide = new Dictionary<int, double>();
+
+        void ToggleShowInfoColumns()
         {
             var gridView = lmListView.ListView.View as GridView;
             if (gridView != null)
@@ -148,12 +151,12 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void ShowContextMenu(Point point)
+        void ShowContextMenu(Point point)
         {
             contextMenuStrip1.Show(point);
         }
 
-        private void JumpToCorrespondingLine()
+        void JumpToCorrespondingLine()
         {
             int correspondingIndex = m_LogViewer.GetCorrespondingVisibleIndex(lmListView.ListView.SelectedIndex);
             if ((correspondingIndex >= 0) && (correspondingIndex < lmListView.ListView.Items.Count))
@@ -163,7 +166,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void LimitToSelectedMethod()
+        void LimitToSelectedMethod()
         {
             int correspondingIndex = m_LogViewer.GetCorrespondingVisibleIndex(lmListView.ListView.SelectedIndex);
             if ((correspondingIndex >= 0) && (correspondingIndex < lmListView.ListView.Items.Count))
@@ -174,7 +177,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void ScrollDown()
+        void ScrollDown()
         {
             if (lmListView.ListView.Items.Count > 0)
             {
@@ -183,7 +186,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void ShowThreadAnalyzer()
+        void ShowThreadAnalyzer()
         {
             var selectedItems = from object selectedItem in lmListView.ListView.SelectedItems
                                 select lmListView.ListView.Items.IndexOf(selectedItem)
@@ -196,7 +199,7 @@ namespace Bluehands.Repository.Diagnostics
 
         #region GUI modifiers
 
-        private void ClearListView()
+        void ClearListView()
         {
             SetTitle(string.Empty);
             m_LogViewer.ClearLog();
@@ -204,21 +207,23 @@ namespace Bluehands.Repository.Diagnostics
         #endregion
 
         #region Event handler
-        private void MiOpenClick(object sender, EventArgs e)
+
+        void MiOpenClick(object sender, EventArgs e)
         {
             StartReadLogFiles(GetLogFileNames(), false);
         }
-        private void AddToolStripMenuItemClick(object sender, EventArgs e)
+
+        void AddToolStripMenuItemClick(object sender, EventArgs e)
         {
             StartReadLogFiles(GetLogFileNames(), true);
         }
 
-        private void ExitToolStripMenuItemClick(object sender, EventArgs e)
+        void ExitToolStripMenuItemClick(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void OpenFolderToolStripMenuItemClick(object sender, EventArgs e)
+        void OpenFolderToolStripMenuItemClick(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(m_LogFilePath) &&
                 Directory.Exists(m_LogFilePath))
@@ -227,7 +232,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private string[] GetLogFileNames()
+        string[] GetLogFileNames()
         {
             var result = new string[0];
             using (var dlg = new OpenFileDialog())
@@ -241,7 +246,7 @@ namespace Bluehands.Repository.Diagnostics
             return result;
         }
 
-        private void ListViewDrop(object sender, DragEventArgs e)
+        void ListViewDrop(object sender, DragEventArgs e)
         {
             if (e.Data is System.Windows.DataObject && ((System.Windows.DataObject)e.Data).ContainsFileDropList())
             {
@@ -281,78 +286,86 @@ namespace Bluehands.Repository.Diagnostics
 
         #region form events
 
-        private void ClearToolStripMenuItemClick(object sender, EventArgs e)
+        void ClearToolStripMenuItemClick(object sender, EventArgs e)
         {
             ClearListView();
         }
 
-        private void SearchMenuItemClick(object sender, EventArgs e)
-        {
-            ProcessSearch(OpenFindDialog());
-        }
-
-        private void FindToolStripMenuItemClick(object sender, EventArgs e)
+        void FindToolStripMenuItemClick(object sender, EventArgs e)
         {
             SelectNextHighlightedItem(false);
         }
 
-        private void FindPreviousToolStripMenuItemClick(object sender, EventArgs e)
+        void FindPreviousToolStripMenuItemClick(object sender, EventArgs e)
         {
             SelectNextHighlightedItem(true);
         }
 
-        private void ProcessSearch(FindDialogResult dlgResult)
+        void SearchMenuItemClick(object sender, EventArgs e)
         {
-            m_LogViewer.ProcessSearch(dlgResult);
+            OpenFindDialog();
+        }
+
+        int ProcessSearch(Option<FindCommand> dlgResult)
+        {
+            var count = dlgResult.Match(
+                r => m_LogViewer.ProcessSearch(r), 
+                () => m_LogViewer.HighlightItems(i => false));
+            
             lmListView.ListView.Items.Refresh();
             SelectNextHighlightedItem(false);
+            return count;
         }
 
-        private FindDialogResult OpenFindDialog()
+        void OpenFindDialog()
         {
-            var result = new FindDialogResult();
-            using (var dlg = new FindDialog())
+            var existing = Application.OpenForms.OfType<FindDialog>().FirstOrDefault();
+            if (existing != null)
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    result.RunTimeInMs = dlg.RunTimeInMs;
-                    result.SearchPattern = dlg.Pattern;
-                }
+                existing.BringToFront();
+                return;
             }
-            return result;
+
+
+            var dlg = new FindDialog(
+                c => ProcessSearch(c),
+                c => m_LogViewer.CountItems(c),
+                backwards => SelectNextHighlightedItem(backwards)
+                );
+            dlg.Show(this);
         }
 
-        private void TxtLevelFilterTextChanged(object sender, EventArgs e)
+        void TxtLevelFilterTextChanged(object sender, EventArgs e)
         {
             FilterColumn(LogViewer.LogColumnType.Level, txtLevelFilter.Text);
         }
 
-        private void TxtThreadIdFilterTextChanged(object sender, EventArgs e)
+        void TxtThreadIdFilterTextChanged(object sender, EventArgs e)
         {
             FilterColumn(LogViewer.LogColumnType.ThreadId, txtThreadIdFilter.Text);
         }
 
-        private void TxtInstanceFilterTextChanged(object sender, EventArgs e)
+        void TxtInstanceFilterTextChanged(object sender, EventArgs e)
         {
             FilterColumn(LogViewer.LogColumnType.Instance, txtInstanceFilter.Text);
         }
 
-        private void TxtTimeFilterTextChanged(object sender, EventArgs e)
+        void TxtTimeFilterTextChanged(object sender, EventArgs e)
         {
             FilterColumn(LogViewer.LogColumnType.Time, txtTimeFilter.Text);
         }
 
-        private void TxtMessageFilterTextChanged(object sender, EventArgs e)
+        void TxtMessageFilterTextChanged(object sender, EventArgs e)
         {
             FilterColumn(LogViewer.LogColumnType.Message, txtMessageFilter.Text);
         }
 
-        private void TxtFilenameFilterTextChanged(object sender, EventArgs e)
+        void TxtFilenameFilterTextChanged(object sender, EventArgs e)
         {
             FilterColumn(LogViewer.LogColumnType.Filename, txtFilenameFilter.Text);
         }
 
-        private void TxtLineNrTextChanged(object sender, EventArgs e)
+        void TxtLineNrTextChanged(object sender, EventArgs e)
         {
             if (m_LogViewer.SetLineNrLimits(txtLineNr.Text))
             {
@@ -360,12 +373,12 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void RefreshToolStripMenuItemClick(object sender, EventArgs e)
+        void RefreshToolStripMenuItemClick(object sender, EventArgs e)
         {
             RefreshCurrentLog();
         }
 
-        private void LmListViewKeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        void LmListViewKeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
             var keyData = new Keys();
 
@@ -387,7 +400,7 @@ namespace Bluehands.Repository.Diagnostics
             LogViewerFormKeyUp(sender, new KeyEventArgs(keyData));
         }
 
-        private void LogViewerFormKeyUp(object sender, KeyEventArgs e)
+        void LogViewerFormKeyUp(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
@@ -401,13 +414,14 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void RefreshCurrentLog()
+        void RefreshCurrentLog()
         {
             m_LogViewer.RefreshCurrentLog();
         }
 
-        private LogListViewItem m_CurrentSearchItem;
-        private void SelectNextHighlightedItem(bool backwards)
+        LogListViewItem m_CurrentSearchItem;
+
+        void SelectNextHighlightedItem(bool backwards)
         {
             if ((lmListView.ListView.Items.Count == 0) || (m_LogViewer.VisibleItems.Count == 0))
             {
@@ -429,7 +443,7 @@ namespace Bluehands.Repository.Diagnostics
             } while (index != startIndex);
         }
 
-        private int GetStartIndex()
+        int GetStartIndex()
         {
             if (m_CurrentSearchItem == null)
             {
@@ -447,7 +461,7 @@ namespace Bluehands.Repository.Diagnostics
             return startIndex;
         }
 
-        private int GetNextItemIndex(int index, bool backwards)
+        int GetNextItemIndex(int index, bool backwards)
         {
             var itemCount = lmListView.ListView.Items.Count;
             index = backwards ? index - 1 : index + 1;
@@ -455,7 +469,7 @@ namespace Bluehands.Repository.Diagnostics
             return index;
         }
 
-        private void LmListViewMouseUp(object sender, MouseButtonEventArgs e)
+        void LmListViewMouseUp(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Right)
             {
@@ -465,12 +479,12 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void LogViewerFormSizeChanged(object sender, EventArgs e)
+        void LogViewerFormSizeChanged(object sender, EventArgs e)
         {
             ResizeFilterTextboxes();
         }
 
-        private void LogViewerFormShown(object sender, EventArgs e)
+        void LogViewerFormShown(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(m_StartUpFile))
             {
@@ -491,12 +505,12 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void ToggleIndentionToolStripMenuItemClick(object sender, EventArgs e)
+        void ToggleIndentionToolStripMenuItemClick(object sender, EventArgs e)
         {
             m_LogViewer.ToggleIndentionOnOff();
         }
 
-        private void ScrollDownCheckedChanged(object sender, EventArgs e)
+        void ScrollDownCheckedChanged(object sender, EventArgs e)
         {
             if (tsmiScrollDown.Checked)
             {
@@ -505,7 +519,7 @@ namespace Bluehands.Repository.Diagnostics
             Settings.Default.AlwaysScrolledDown = tsmiScrollDown.Checked;
         }
 
-        private void VisibleItemsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void VisibleItemsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             if (tsmiScrollDown.Checked)
             {
@@ -513,29 +527,29 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void ScrollDownTimerTick(object sender, EventArgs e)
+        void ScrollDownTimerTick(object sender, EventArgs e)
         {
             m_ScrollDownTimer.Stop();
             ScrollDown();
         }
 
-        private void JumpToToolStripMenuItemClick(object sender, EventArgs e)
+        void JumpToToolStripMenuItemClick(object sender, EventArgs e)
         {
             JumpToCorrespondingLine();
         }
 
-        private void ShowMethodContentsOnlyToolStripMenuItemClick(object sender, EventArgs e)
+        void ShowMethodContentsOnlyToolStripMenuItemClick(object sender, EventArgs e)
         {
             LimitToSelectedMethod();
         }
 
-        private void ToggleShowInfoColumnsToolStripMenuItemClick(object sender, EventArgs e)
+        void ToggleShowInfoColumnsToolStripMenuItemClick(object sender, EventArgs e)
         {
             ToggleShowInfoColumns();
             Settings.Default.HideInfoColumns = toggleShowInfoColumnsToolStripMenuItem.Checked;
         }
 
-        private void ThreadAnalyzerToolStripMenuItemClick(object sender, EventArgs e)
+        void ThreadAnalyzerToolStripMenuItemClick(object sender, EventArgs e)
         {
             ShowThreadAnalyzer();
         }
@@ -544,7 +558,7 @@ namespace Bluehands.Repository.Diagnostics
 
         #region read log files
 
-        private void StartReadLogFiles(string[] filenames, bool append)
+        void StartReadLogFiles(string[] filenames, bool append)
         {
             if (filenames.Any())
             {
@@ -559,13 +573,13 @@ namespace Bluehands.Repository.Diagnostics
             logFileReader.RunWorkerAsync(new object[] { filenames, append });
         }
 
-        private void ReadLogFiles(IEnumerable<string> filenames, bool append)
+        void ReadLogFiles(IEnumerable<string> filenames, bool append)
         {
             var infos = filenames.Select(filename => new LogFileInfo(filename)).ToList();
             m_LogViewer.ReadLogFiles(infos, append);
         }
 
-        private void LogFileReaderDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        void LogFileReaderDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var args = e.Argument as object[];
             if ((args != null) && (args.Length == 2))
@@ -579,15 +593,16 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void LogFileReaderRunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) { }
+        void LogFileReaderRunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) { }
 
         #endregion
 
         #region filter lines
 
-        private object[] m_LastFilterParams;
-        private object m_SelectedItemBeforeFilterStart;
-        private void FilterColumn(LogViewer.LogColumnType columnType, string pattern)
+        object[] m_LastFilterParams;
+        object m_SelectedItemBeforeFilterStart;
+
+        void FilterColumn(LogViewer.LogColumnType columnType, string pattern)
         {
             m_SelectedItemBeforeFilterStart = lmListView.ListView.SelectedItem;
 
@@ -601,7 +616,7 @@ namespace Bluehands.Repository.Diagnostics
             filterWorker.RunWorkerAsync(filterParams);
         }
 
-        private void FilterWorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        void FilterWorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var args = e.Argument as object[];
             if ((args != null) && (args.Length == 2))
@@ -613,7 +628,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void FilterWorkerRunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        void FilterWorkerRunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
             if (m_LastFilterParams != null)
             {
@@ -623,7 +638,7 @@ namespace Bluehands.Repository.Diagnostics
             SelectAndScrollIntoView(m_SelectedItemBeforeFilterStart);
         }
 
-        private void SelectAndScrollIntoView(object item)
+        void SelectAndScrollIntoView(object item)
         {
             lmListView.ListView.SelectedItem = item;
             lmListView.ListView.ScrollIntoView(item);
@@ -663,5 +678,88 @@ namespace Bluehands.Repository.Diagnostics
                 MessageBox.Show($@"Failed: {ex}", @"Error");
             }
         }
+    }
+
+    public abstract class FindCommand
+    {
+        public static FindCommand Search(string pattern) => new Search_(pattern);
+        public static FindCommand RuntimeAtLeast(int milliseconds) => new RuntimeAtLeast_(milliseconds);
+
+        public class Search_ : FindCommand
+        {
+            public string Pattern { get; }
+
+            public Search_(string pattern) : base(UnionCases.Search)
+            {
+                Pattern = pattern;
+            }
+        }
+
+        public class RuntimeAtLeast_ : FindCommand
+        {
+            public int Milliseconds { get; }
+
+            public RuntimeAtLeast_(int milliseconds) : base(UnionCases.RuntimeAtLeast)
+            {
+                Milliseconds = milliseconds;
+            }
+        }
+
+        internal enum UnionCases
+        {
+            Search,
+            RuntimeAtLeast
+        }
+
+        internal UnionCases UnionCase { get; }
+        FindCommand(UnionCases unionCase)
+        {
+            UnionCase = unionCase;
+        }
+
+        public override string ToString() => Enum.GetName(typeof(UnionCases), UnionCase) ?? UnionCase.ToString();
+        bool Equals(FindCommand other) => UnionCase == other.UnionCase;
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((FindCommand)obj);
+        }
+
+        public override int GetHashCode() => (int)UnionCase;
+    }
+
+    public static class FindCommandExtension
+    {
+        public static T Match<T>(this FindCommand findCommand, Func<FindCommand.Search_, T> search, Func<FindCommand.RuntimeAtLeast_, T> runtimeAtLeast)
+        {
+            switch (findCommand.UnionCase)
+            {
+                case FindCommand.UnionCases.Search:
+                    return search((FindCommand.Search_)findCommand);
+                case FindCommand.UnionCases.RuntimeAtLeast:
+                    return runtimeAtLeast((FindCommand.RuntimeAtLeast_)findCommand);
+                default:
+                    throw new ArgumentException($"Unknown type implementing FindCommand: {findCommand.GetType().Name}");
+            }
+        }
+
+        public static async Task<T> Match<T>(this FindCommand findCommand, Func<FindCommand.Search_, Task<T>> search, Func<FindCommand.RuntimeAtLeast_, Task<T>> runtimeAtLeast)
+        {
+            switch (findCommand.UnionCase)
+            {
+                case FindCommand.UnionCases.Search:
+                    return await search((FindCommand.Search_)findCommand).ConfigureAwait(false);
+                case FindCommand.UnionCases.RuntimeAtLeast:
+                    return await runtimeAtLeast((FindCommand.RuntimeAtLeast_)findCommand).ConfigureAwait(false);
+                default:
+                    throw new ArgumentException($"Unknown type implementing FindCommand: {findCommand.GetType().Name}");
+            }
+        }
+
+        public static async Task<T> Match<T>(this Task<FindCommand> findCommand, Func<FindCommand.Search_, T> search, Func<FindCommand.RuntimeAtLeast_, T> runtimeAtLeast) => (await findCommand.ConfigureAwait(false)).Match(search, runtimeAtLeast);
+        public static async Task<T> Match<T>(this Task<FindCommand> findCommand, Func<FindCommand.Search_, Task<T>> search, Func<FindCommand.RuntimeAtLeast_, Task<T>> runtimeAtLeast) => await(await findCommand.ConfigureAwait(false)).Match(search, runtimeAtLeast).ConfigureAwait(false);
     }
 }

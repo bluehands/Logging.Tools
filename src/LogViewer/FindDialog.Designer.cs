@@ -36,6 +36,8 @@
             this.txtRunTime = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.m_ErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
+            this.btnCount = new System.Windows.Forms.Button();
+            this.lblMessage = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.m_ErrorProvider)).BeginInit();
             this.SuspendLayout();
             // 
@@ -49,23 +51,26 @@
             // 
             // cmdOK
             // 
-            this.cmdOK.Location = new System.Drawing.Point(255, 84);
+            this.cmdOK.CausesValidation = false;
+            this.cmdOK.Location = new System.Drawing.Point(181, 84);
             this.cmdOK.Name = "cmdOK";
             this.cmdOK.Size = new System.Drawing.Size(75, 23);
             this.cmdOK.TabIndex = 2;
-            this.cmdOK.Text = "OK";
+            this.cmdOK.Text = "Find";
             this.cmdOK.UseVisualStyleBackColor = true;
             this.cmdOK.Click += new System.EventHandler(this.cmdOK_Click);
             // 
             // cmdAbort
             // 
+            this.cmdAbort.CausesValidation = false;
             this.cmdAbort.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.cmdAbort.Location = new System.Drawing.Point(350, 84);
             this.cmdAbort.Name = "cmdAbort";
             this.cmdAbort.Size = new System.Drawing.Size(75, 23);
-            this.cmdAbort.TabIndex = 3;
-            this.cmdAbort.Text = "Cancel";
+            this.cmdAbort.TabIndex = 4;
+            this.cmdAbort.Text = "Close";
             this.cmdAbort.UseVisualStyleBackColor = true;
+            this.cmdAbort.Click += new System.EventHandler(this.cmdAbort_Click);
             // 
             // label1
             // 
@@ -97,6 +102,28 @@
             // 
             this.m_ErrorProvider.ContainerControl = this;
             // 
+            // btnCount
+            // 
+            this.btnCount.CausesValidation = false;
+            this.btnCount.Location = new System.Drawing.Point(266, 84);
+            this.btnCount.Name = "btnCount";
+            this.btnCount.Size = new System.Drawing.Size(75, 23);
+            this.btnCount.TabIndex = 3;
+            this.btnCount.Text = "Count";
+            this.btnCount.UseVisualStyleBackColor = true;
+            this.btnCount.Click += new System.EventHandler(this.btnCount_Click);
+            // 
+            // lblMessage
+            // 
+            this.lblMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.lblMessage.Location = new System.Drawing.Point(12, 87);
+            this.lblMessage.Name = "lblMessage";
+            this.lblMessage.ReadOnly = true;
+            this.lblMessage.Size = new System.Drawing.Size(163, 13);
+            this.lblMessage.TabIndex = 1;
+            this.lblMessage.TabStop = false;
+            this.lblMessage.TextChanged += new System.EventHandler(this.TxtRuntime_TextChanged);
+            // 
             // FindDialog
             // 
             this.AcceptButton = this.cmdOK;
@@ -107,15 +134,20 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cmdAbort);
+            this.Controls.Add(this.btnCount);
             this.Controls.Add(this.cmdOK);
+            this.Controls.Add(this.lblMessage);
             this.Controls.Add(this.txtRunTime);
             this.Controls.Add(this.txtPattern);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "FindDialog";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Find";
+            this.Load += new System.EventHandler(this.FindDialog_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FindDialog_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.m_ErrorProvider)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -131,5 +163,7 @@
         private System.Windows.Forms.TextBox txtRunTime;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ErrorProvider m_ErrorProvider;
+        private System.Windows.Forms.Button btnCount;
+        private System.Windows.Forms.TextBox lblMessage;
     }
 }

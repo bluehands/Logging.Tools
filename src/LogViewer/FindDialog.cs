@@ -1,20 +1,27 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using FunicularSwitch;
 
 namespace Bluehands.Repository.Diagnostics
 {
     public partial class FindDialog : Form
     {
+        readonly Func<Option<FindCommand>, int> m_DoSearch;
+        readonly Func<FindCommand, int> m_DoCount;
+        readonly Action<bool> m_Highlight;
         public string Pattern = string.Empty;
         public int RunTimeInMs = int.MinValue;
 
-        public FindDialog()
+        public FindDialog(Func<Option<FindCommand>, int> doSearch, Func<FindCommand, int> doCount, Action<bool> highlight)
         {
+            m_DoSearch = doSearch;
+            m_DoCount = doCount;
+            m_Highlight = highlight;
             InitializeComponent();
         }
 
-        private void TxtPattern_TextChanged(object sender, EventArgs e)
+        void TxtPattern_TextChanged(object sender, EventArgs e)
         {
             bool inputOk = true;
             try
@@ -34,22 +41,56 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void TxtRuntime_TextChanged(object sender, EventArgs e)
+        void TxtRuntime_TextChanged(object sender, EventArgs e)
         {
             if (!int.TryParse(txtRunTime.Text, out RunTimeInMs))
             {
-                m_ErrorProvider.SetError(txtRunTime, "Not an integer");
                 RunTimeInMs = int.MinValue;
-            }
-            else
-            {
-                m_ErrorProvider.SetError(txtPattern, null);
             }
         }
 
-        private void cmdOK_Click(object sender, EventArgs e)
+        void cmdOK_Click(object sender, EventArgs e)
         {
-            DialogResult = DialogResult.OK;
+            var count = m_DoSearch(GetCommand());
+            DisplayCount(count);
+        }
+
+        void btnCount_Click(object sender, EventArgs e)
+        {
+            var count = GetCommand().Match(c => m_DoCount(c), () => 0);
+            DisplayCount(count);
+        }
+
+        void DisplayCount(int count)
+        {
+            lblMessage.Text = $@"Hits: {count}";
+        }
+
+        Option<FindCommand> GetCommand()
+        {
+            if (!string.IsNullOrEmpty(Pattern))
+                return FindCommand.Search(Pattern);
+            if (RunTimeInMs > 0)
+                return FindCommand.RuntimeAtLeast(RunTimeInMs);
+            return Option<FindCommand>.None;
+        }
+
+        void cmdAbort_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void FindDialog_Load(object sender, EventArgs e)
+        {
+            KeyPreview = true;
+        }
+
+        private void FindDialog_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F3)
+            {
+                m_Highlight(e.Shift);
+            }
         }
     }
 }

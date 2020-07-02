@@ -327,12 +327,17 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        public void HighlightItems(Predicate<LogListViewItem> match)
+        public int HighlightItems(Func<LogListViewItem, bool> match)
         {
+            int count = 0;
             foreach (var item in VisibleItems)
             {
-                item.Highlighted = match(item);
+                var matched = match(item);
+                item.Highlighted = matched;
+                if (matched)
+                    count++;
             }
+            return count;
         }
 
         public void RemoveHighlighting()
@@ -517,31 +522,26 @@ namespace Bluehands.Repository.Diagnostics
             return correspondingIndex;
         }
 
-        public void ProcessSearch(LogViewerForm.FindDialogResult dlgResult)
+        public int ProcessSearch(FindCommand findCommand)
         {
-            Predicate<LogListViewItem> predicate;
-            if (!string.IsNullOrEmpty(dlgResult.SearchPattern) && dlgResult.RunTimeInMs >= 0)
-            {
-                predicate = item =>
-                               Regex.Match(item.Message, dlgResult.SearchPattern).Success &&
-                               m_LogFormatProvider.GetTraceTimeInMs(item) >= dlgResult.RunTimeInMs;
-            }
-            else if (string.IsNullOrEmpty(dlgResult.SearchPattern) && dlgResult.RunTimeInMs >= 0)
-            {
-                predicate = item =>
-                               m_LogFormatProvider.GetTraceTimeInMs(item) >= dlgResult.RunTimeInMs;
-            }
-            else if (!string.IsNullOrEmpty(dlgResult.SearchPattern) && dlgResult.RunTimeInMs < 0)
-            {
-                predicate = item =>
-                               Regex.Match(item.Message, dlgResult.SearchPattern).Success;
-            }
-            else
-            {
-                predicate = item => false;
-            }
-            HighlightItems(predicate);
+            var predicate = MakeSearchPredicate(findCommand);
+            return HighlightItems(predicate);
         }
+
+        Func<LogListViewItem, bool> MakeSearchPredicate(FindCommand findCommand)
+        {
+            var predicate = findCommand.Match<Func<LogListViewItem, bool>>(
+                search =>
+                {
+                    var regex = new Regex(search.Pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                    return item => regex.IsMatch(item.Message);
+                },
+                runtimeAtLeast => item => m_LogFormatProvider.GetTraceTimeInMs(item) >= runtimeAtLeast.Milliseconds
+            );
+            return predicate;
+        }
+
+        public int CountItems(FindCommand findCommand) => VisibleItems.Count(MakeSearchPredicate(findCommand));
     }
 
     public class LogParser
