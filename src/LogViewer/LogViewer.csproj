@@ -41,8 +41,8 @@
     <PublisherName>bluehands GmbH &amp; Co.mmunication KG</PublisherName>
     <MinimumRequiredVersion>1.1.0.10</MinimumRequiredVersion>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>44</ApplicationRevision>
-    <ApplicationVersion>1.1.0.44</ApplicationVersion>
+    <ApplicationRevision>45</ApplicationRevision>
+    <ApplicationVersion>1.1.0.45</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
