@@ -121,6 +121,8 @@ namespace Bluehands.Repository.Diagnostics
         readonly List<LogListViewItem> m_AllItems = new List<LogListViewItem>();
         public ObservableCollection<LogListViewItem> VisibleItems { get; } = new ObservableCollection<LogListViewItem>();
 
+        readonly ReaderWriterLockSlim m_VisibleItemsLock = new ReaderWriterLockSlim();
+
         readonly LogFilters m_Filters = new LogFilters();
 
         int m_MaxVisibleLineNr = int.MaxValue;
@@ -181,11 +183,11 @@ namespace Bluehands.Repository.Diagnostics
             m_AllItems.AddRange(newListItems);
             if (existingItemsModified)
             {
-                ReloadItemsWithCurrentFilter(MatchesCurrentFilter, m_AllItems);
+                ReloadItemsWithCurrentFilter(MatchesCurrentFilter, () => false);
             }
             else
             {
-                AddVisibleItems(newListItems.Where(MatchesCurrentFilter).ToList());
+                AddVisibleItems(newListItems.Where(MatchesCurrentFilter).ToList(), () => false);
             }
 
             RememberCurrentlyOpenedFiles();
@@ -229,24 +231,28 @@ namespace Bluehands.Repository.Diagnostics
             destination.AddRange(logParser.ParseLines(lines, filename, m_AllItems.Count));
         }
 
-        void AddVisibleItems(List<LogListViewItem> items)
+        void AddVisibleItems(List<LogListViewItem> items, Func<bool> shouldCancel)
         {
             var lowerIndex = 0;
-            const int stepSize = 1000;
+            const int stepSize = 5000;
             while (lowerIndex < items.Count)
             {
+                if (shouldCancel()) break;
                 var count = Math.Min(stepSize, items.Count - lowerIndex);
                 Dispatch(new Action<List<LogListViewItem>>(AddVisibleItemsRange), items.GetRange(lowerIndex, count));
                 lowerIndex += count;
             }
         }
 
-        void AddVisibleItemsRange(List<LogListViewItem> items)
+        void AddVisibleItemsRange(IEnumerable<LogListViewItem> items)
         {
-            foreach (var item in items)
+            ChangeVisibleItems(i =>
             {
-                VisibleItems.Add(item);
-            }
+                foreach (var item in items)
+                {
+                    VisibleItems.Add(item);
+                }
+            });
         }
 
         public void ClearLog()
@@ -259,7 +265,25 @@ namespace Bluehands.Repository.Diagnostics
 
         void ClearVisibleItems()
         {
-            Dispatch(new Action(VisibleItems.Clear));
+            Dispatch(new Action(InternalClearVisibleItems));
+        }
+
+        void InternalClearVisibleItems()
+        {
+            ChangeVisibleItems(i => i.Clear());
+        }
+
+        void ChangeVisibleItems(Action<ObservableCollection<LogListViewItem>> change)
+        {
+            m_VisibleItemsLock.EnterWriteLock();
+            try
+            {
+                change(VisibleItems);
+            }
+            finally
+            {
+                m_VisibleItemsLock.ExitWriteLock();
+            }
         }
 
         void Dispatch(Delegate method, params object[] args)
@@ -318,28 +342,25 @@ namespace Bluehands.Repository.Diagnostics
             m_AllItems.RemoveAll(item => (item.Filename == fileName));
         }
 
-        public void ForeachVisibleItem(Predicate<LogListViewItem> match, Action<LogListViewItem> action)
-        {
-            foreach (var item in VisibleItems)
-            {
-                if (match(item))
-                {
-                    action(item);
-                }
-            }
-        }
-
         public int HighlightItems(Func<LogListViewItem, bool> match)
         {
-            int count = 0;
-            foreach (var item in VisibleItems)
+            m_VisibleItemsLock.EnterReadLock();
+            try
             {
-                var matched = match(item);
-                item.Highlighted = matched;
-                if (matched)
-                    count++;
+                var count = 0;
+                foreach (var item in VisibleItems)
+                {
+                    var matched = match(item);
+                    item.Highlighted = matched;
+                    if (matched)
+                        count++;
+                }
+                return count;
             }
-            return count;
+            finally
+            {
+                m_VisibleItemsLock.ExitReadLock();
+            }
         }
 
         public void RemoveHighlighting()
@@ -350,13 +371,13 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        public void FilterColumn(LogColumnType column, string pattern)
+        public void FilterColumn(LogColumnType column, string pattern, Func<bool> shouldCancel)
         {
             var currentFilterString = m_Filters.CurrentFilterString(column);
             if (pattern == currentFilterString) return;
 
             if (pattern == NegationPrefix) pattern = DefaultFilterString;
-            //negated all matches nothing. User is about to exclude more less...
+            //negated all matches nothing. User is about to exclude more...
             else if (pattern.StartsWith(NegationPrefix) && pattern.EndsWith("|")) return;
 
             if (!m_Filters.TrySetFilter(column, pattern))
@@ -364,15 +385,16 @@ namespace Bluehands.Repository.Diagnostics
                 return;
             }
 
-            var limitingSearch = IsLimitingSearch(column, pattern, currentFilterString);
-            if (!limitingSearch)
-            {
-                ReloadItemsWithCurrentFilter(m_Filters.Matches, m_AllItems);
-            }
-            else
-            {
-                ReloadItemsWithCurrentFilter(m_Filters.GetMatcher(column), VisibleItems);
-            }
+            ReloadItemsWithCurrentFilter(m_Filters.Matches, shouldCancel);
+            //var limitingSearch = IsLimitingSearch(column, pattern, currentFilterString);
+            //if (!limitingSearch)
+            //{
+            //    ReloadItemsWithCurrentFilter(m_Filters.Matches, shouldCancel);
+            //}
+            //else
+            //{
+            //    ApplyFilterToVisibleItems(m_Filters.GetMatcher(column), shouldCancel);
+            //}
         }
 
         static bool IsLimitingSearch(LogColumnType column, string pattern, string currentFilterString)
@@ -406,11 +428,32 @@ namespace Bluehands.Repository.Diagnostics
             return false;
         }
 
-        void ReloadItemsWithCurrentFilter(Func<LogListViewItem, bool> matcher, IEnumerable<LogListViewItem> source)
+        void ReloadItemsWithCurrentFilter(Func<LogListViewItem, bool> matcher, Func<bool> shouldCancel)
         {
-            var newVisibleItems = source.Where(matcher).ToList();
+            var newVisibleItems = m_AllItems.Where(matcher).ToList();
+            SetVisibleItems(newVisibleItems, shouldCancel);
+        }
+
+        void ApplyFilterToVisibleItems(Func<LogListViewItem, bool> matcher, Func<bool> shouldCancel)
+        {
+            List<LogListViewItem> newVisibleItems;
+            m_VisibleItemsLock.EnterReadLock();
+            try
+            {
+                newVisibleItems = VisibleItems.Where(i => matcher(i)).ToList();
+            }
+            finally
+            {
+                m_VisibleItemsLock.ExitReadLock();
+            }
+            SetVisibleItems(newVisibleItems, shouldCancel);
+        }
+
+        void SetVisibleItems(List<LogListViewItem> newVisibleItems, Func<bool> shouldCancel)
+        {
             ClearVisibleItems();
-            AddVisibleItems(newVisibleItems);
+            if (shouldCancel()) return;
+            AddVisibleItems(newVisibleItems, shouldCancel);
         }
 
         public void ToggleIndentionOnOff()
@@ -425,7 +468,7 @@ namespace Bluehands.Repository.Diagnostics
                 IndentLines();
                 m_IndentionOn = true;
             }
-            ReloadItemsWithCurrentFilter(MatchesCurrentFilter, m_AllItems);
+            ReloadItemsWithCurrentFilter(MatchesCurrentFilter, () => false);
         }
 
         void RemoveIndention()

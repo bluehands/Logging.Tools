@@ -46,8 +46,6 @@
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.threadAnalyzerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toggleIndentionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleShowInfoColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiScrollDown = new System.Windows.Forms.ToolStripMenuItem();
@@ -150,8 +148,6 @@
             this.toolStripMenuItem1,
             this.refreshToolStripMenuItem,
             this.toolStripSeparator1,
-            this.threadAnalyzerToolStripMenuItem,
-            this.toolStripSeparator2,
             this.toggleIndentionToolStripMenuItem,
             this.toggleShowInfoColumnsToolStripMenuItem,
             this.tsmiScrollDown});
@@ -202,19 +198,6 @@
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(258, 6);
-            // 
-            // threadAnalyzerToolStripMenuItem
-            // 
-            this.threadAnalyzerToolStripMenuItem.Name = "threadAnalyzerToolStripMenuItem";
-            this.threadAnalyzerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
-            this.threadAnalyzerToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
-            this.threadAnalyzerToolStripMenuItem.Text = "Thread Analyzer";
-            this.threadAnalyzerToolStripMenuItem.Click += new System.EventHandler(this.ThreadAnalyzerToolStripMenuItemClick);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(258, 6);
             // 
             // toggleIndentionToolStripMenuItem
             // 
@@ -289,7 +272,6 @@
             this.txtThreadIdFilter.Name = "txtThreadIdFilter";
             this.txtThreadIdFilter.Size = new System.Drawing.Size(107, 20);
             this.txtThreadIdFilter.TabIndex = 4;
-            this.txtThreadIdFilter.TextChanged += new System.EventHandler(this.TxtThreadIdFilterTextChanged);
             // 
             // txtInstanceFilter
             // 
@@ -299,7 +281,6 @@
             this.txtInstanceFilter.Name = "txtInstanceFilter";
             this.txtInstanceFilter.Size = new System.Drawing.Size(92, 20);
             this.txtInstanceFilter.TabIndex = 5;
-            this.txtInstanceFilter.TextChanged += new System.EventHandler(this.TxtInstanceFilterTextChanged);
             // 
             // txtTimeFilter
             // 
@@ -309,7 +290,6 @@
             this.txtTimeFilter.Name = "txtTimeFilter";
             this.txtTimeFilter.Size = new System.Drawing.Size(110, 20);
             this.txtTimeFilter.TabIndex = 6;
-            this.txtTimeFilter.TextChanged += new System.EventHandler(this.TxtTimeFilterTextChanged);
             // 
             // txtLevelFilter
             // 
@@ -319,7 +299,6 @@
             this.txtLevelFilter.Name = "txtLevelFilter";
             this.txtLevelFilter.Size = new System.Drawing.Size(92, 20);
             this.txtLevelFilter.TabIndex = 7;
-            this.txtLevelFilter.TextChanged += new System.EventHandler(this.TxtLevelFilterTextChanged);
             // 
             // txtMessageFilter
             // 
@@ -329,7 +308,6 @@
             this.txtMessageFilter.Name = "txtMessageFilter";
             this.txtMessageFilter.Size = new System.Drawing.Size(413, 20);
             this.txtMessageFilter.TabIndex = 8;
-            this.txtMessageFilter.TextChanged += new System.EventHandler(this.TxtMessageFilterTextChanged);
             // 
             // txtFilenameFilter
             // 
@@ -339,7 +317,6 @@
             this.txtFilenameFilter.Name = "txtFilenameFilter";
             this.txtFilenameFilter.Size = new System.Drawing.Size(79, 20);
             this.txtFilenameFilter.TabIndex = 9;
-            this.txtFilenameFilter.TextChanged += new System.EventHandler(this.TxtFilenameFilterTextChanged);
             // 
             // elementHost1
             // 
@@ -360,6 +337,7 @@
             // 
             // filterWorker
             // 
+            this.filterWorker.WorkerSupportsCancellation = true;
             this.filterWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.FilterWorkerDoWork);
             this.filterWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.FilterWorkerRunWorkerCompleted);
             // 
@@ -439,8 +417,6 @@
         private System.Windows.Forms.ToolStripMenuItem toggleShowInfoColumnsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tsmiScrollDown;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem threadAnalyzerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem openFolderToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;

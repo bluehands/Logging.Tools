@@ -9,7 +9,10 @@ using System.Windows.Input;
 using Bluehands.Repository.Diagnostics.Properties;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using FunicularSwitch;
 using Application = System.Windows.Forms.Application;
@@ -30,6 +33,8 @@ namespace Bluehands.Repository.Diagnostics
         string m_StartUpFile;
         string m_LogFilePath;
 
+        readonly object m_LastFilterParamsLock = new object();
+
         public LogViewerForm(string startUpFile)
         {
             InitializeComponent();
@@ -49,6 +54,7 @@ namespace Bluehands.Repository.Diagnostics
 
             m_ScrollDownTimer = new Timer { Interval = 300 };
             m_ScrollDownTimer.Tick += ScrollDownTimerTick;
+            SubscribeFilterChanged();
         }
 
         static void LogViewerFormClosing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -184,17 +190,6 @@ namespace Bluehands.Repository.Diagnostics
                 var last = lmListView.ListView.Items[lmListView.ListView.Items.Count - 1];
                 lmListView.ListView.ScrollIntoView(last);
             }
-        }
-
-        void ShowThreadAnalyzer()
-        {
-            var selectedItems = from object selectedItem in lmListView.ListView.SelectedItems
-                                select lmListView.ListView.Items.IndexOf(selectedItem)
-                                    into index
-                                select m_LogViewer.VisibleItems[index].LineNr;
-
-            var analyzer = new ThreadAnalyzerForm(selectedItems, m_LogViewer);
-            analyzer.ShowDialog(this);
         }
 
         #region GUI modifiers
@@ -334,6 +329,95 @@ namespace Bluehands.Repository.Diagnostics
                 );
             dlg.SetPattern(GetSelectedText());
             dlg.Show(this);
+        }
+
+        public IObservable<(LogViewer.LogColumnType column, string pattern)> MessageFilterText
+        {
+            get
+            {
+                return Observable
+                    .FromEventPattern(
+                        h => txtMessageFilter.TextChanged += h,
+                        h => txtMessageFilter.TextChanged -= h)
+                    .Select(x => (LogViewer.LogColumnType.Message, txtMessageFilter.Text));
+            }
+        }
+
+        public IObservable<(LogViewer.LogColumnType column, string pattern)> ThreadIdFilterText
+        {
+            get
+            {
+                return Observable
+                    .FromEventPattern(
+                        h => txtThreadIdFilter.TextChanged += h,
+                        h => txtThreadIdFilter.TextChanged -= h)
+                    .Select(x => (LogViewer.LogColumnType.ThreadId, txtThreadIdFilter.Text));
+            }
+        }
+
+        public IObservable<(LogViewer.LogColumnType column, string pattern)> LevelFilterText
+        {
+            get
+            {
+                return Observable
+                    .FromEventPattern(
+                        h => txtLevelFilter.TextChanged += h,
+                        h => txtLevelFilter.TextChanged -= h)
+                    .Select(x => (LogViewer.LogColumnType.Level, txtLevelFilter.Text));
+            }
+        }
+
+        public IObservable<(LogViewer.LogColumnType column, string pattern)> TimeFilterText
+        {
+            get
+            {
+                return Observable
+                    .FromEventPattern(
+                        h => txtTimeFilter.TextChanged += h,
+                        h => txtTimeFilter.TextChanged -= h)
+                    .Select(x => (LogViewer.LogColumnType.Time, txtTimeFilter.Text));
+            }
+        }
+
+        public IObservable<(LogViewer.LogColumnType column, string pattern)> FilenameFilterText
+        {
+            get
+            {
+                return Observable
+                    .FromEventPattern(
+                        h => txtFilenameFilter.TextChanged += h,
+                        h => txtFilenameFilter.TextChanged -= h)
+                    .Select(x => (LogViewer.LogColumnType.Filename, txtFilenameFilter.Text));
+            }
+        }
+
+        public IObservable<(LogViewer.LogColumnType column, string pattern)> InstanceFilterText
+        {
+            get
+            {
+                return Observable
+                    .FromEventPattern(
+                        h => txtInstanceFilter.TextChanged += h,
+                        h => txtInstanceFilter.TextChanged -= h)
+                    .Select(x => (LogViewer.LogColumnType.Instance, txtInstanceFilter.Text));
+            }
+        }
+
+        
+
+        void SubscribeFilterChanged()
+        {
+            MessageFilterText
+                .Merge(LevelFilterText)
+                .Merge(ThreadIdFilterText)
+                .Merge(InstanceFilterText)
+                .Merge(FilenameFilterText)
+                .Merge(TimeFilterText)
+                //.Sample(TimeSpan.FromMilliseconds(300))
+                .BufferWithThrottle(int.MaxValue, TimeSpan.FromMilliseconds(200))
+                .Select(l => l[l.Count -1])
+                .ObserveOn(this)
+                .Subscribe(t => FilterColumn(t.column, t.pattern));
         }
 
         void TxtLevelFilterTextChanged(object sender, EventArgs e)
@@ -552,11 +636,6 @@ namespace Bluehands.Repository.Diagnostics
             Settings.Default.HideInfoColumns = toggleShowInfoColumnsToolStripMenuItem.Checked;
         }
 
-        void ThreadAnalyzerToolStripMenuItemClick(object sender, EventArgs e)
-        {
-            ShowThreadAnalyzer();
-        }
-
         #endregion
 
         #region read log files
@@ -611,11 +690,16 @@ namespace Bluehands.Repository.Diagnostics
 
             var filterParams = new object[] { columnType, pattern };
 
-            if (filterWorker.IsBusy)
+            lock (m_LastFilterParamsLock)
             {
-                m_LastFilterParams = filterParams;
-                return;
+                if (filterWorker.IsBusy)
+                {
+                    m_LastFilterParams = filterParams;
+                    filterWorker.CancelAsync();
+                    return;
+                }
             }
+
             filterWorker.RunWorkerAsync(filterParams);
         }
 
@@ -627,17 +711,21 @@ namespace Bluehands.Repository.Diagnostics
                 var entryType = (LogViewer.LogColumnType)args[0];
                 var pattern = args[1] as string;
 
-                m_LogViewer.FilterColumn(entryType, pattern);
+                m_LogViewer.FilterColumn(entryType, pattern, () => filterWorker.CancellationPending);
             }
         }
 
         void FilterWorkerRunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
-            if (m_LastFilterParams != null)
+            lock (m_LastFilterParamsLock)
             {
-                filterWorker.RunWorkerAsync(m_LastFilterParams);
-                m_LastFilterParams = null;
+                if (m_LastFilterParams != null)
+                {
+                    filterWorker.RunWorkerAsync(m_LastFilterParams);
+                    m_LastFilterParams = null;
+                }
             }
+
             SelectAndScrollIntoView(m_SelectedItemBeforeFilterStart);
         }
 
@@ -765,4 +853,22 @@ namespace Bluehands.Repository.Diagnostics
         public static async Task<T> Match<T>(this Task<FindCommand> findCommand, Func<FindCommand.Search_, T> search, Func<FindCommand.RuntimeAtLeast_, T> runtimeAtLeast) => (await findCommand.ConfigureAwait(false)).Match(search, runtimeAtLeast);
         public static async Task<T> Match<T>(this Task<FindCommand> findCommand, Func<FindCommand.Search_, Task<T>> search, Func<FindCommand.RuntimeAtLeast_, Task<T>> runtimeAtLeast) => await(await findCommand.ConfigureAwait(false)).Match(search, runtimeAtLeast).ConfigureAwait(false);
     }
+
+    public static class ObservableExtension
+    {
+        public static IObservable<IList<TSource>> BufferWithThrottle<TSource>(this IObservable<TSource> source, int maxAmount, TimeSpan threshold)
+        {
+            return Observable.Create<IList<TSource>>((obs) =>
+            {
+                return source.GroupByUntil(_ => true,
+                        g => g.Throttle(threshold).Select(_ => Unit.Default)
+                            .Merge(g.Take(maxAmount)
+                                .LastAsync()
+                                .Select(_ => Unit.Default)))
+                    .SelectMany(i => i.ToList())
+                    .Subscribe(obs);
+            });
+        }
+    }
+
 }
