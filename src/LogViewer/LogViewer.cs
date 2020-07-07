@@ -211,6 +211,7 @@ namespace Bluehands.Repository.Diagnostics
                 fileSystemWatcher.Changed += LogFileChanged;
                 fileSystemWatcher.Deleted += LogFileChanged;
                 fileSystemWatcher.Created += LogFileChanged;
+                fileSystemWatcher.NotifyFilter = fileSystemWatcher.NotifyFilter | NotifyFilters.Size;
                 info.FileSystemWatcher = fileSystemWatcher;
                 fileSystemWatcher.EnableRaisingEvents = true;
                 fileSystemWatcher.IncludeSubdirectories = false;
