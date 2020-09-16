@@ -12,7 +12,6 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using FunicularSwitch;
 using Application = System.Windows.Forms.Application;
@@ -77,7 +76,7 @@ namespace Bluehands.Repository.Diagnostics
         {
             var assembly = Assembly.GetAssembly(GetType());
             Text = !string.IsNullOrEmpty(files)
-                       ? string.Format("Bluehands LogViewer {1} ({0})", files, assembly.GetName().Version)
+                       ? string.Format("bluehands LogViewer {1} ({0})", files, assembly.GetName().Version)
                        : Resources.LogViewerForm_Title + " v" + assembly.GetName().Version;
         }
 
@@ -93,8 +92,7 @@ namespace Bluehands.Repository.Diagnostics
 
         void ResizeFilterTextboxes()
         {
-            var gridView = lmListView.ListView.View as GridView;
-            if (gridView != null)
+            if (lmListView.ListView.View is GridView gridView)
             {
                 if (!double.IsNaN(gridView.Columns[0].Width) &&
                     (tabLayout.ColumnStyles[0].Width != (int)gridView.Columns[0].Width + 4))
@@ -133,8 +131,7 @@ namespace Bluehands.Repository.Diagnostics
 
         void ToggleShowInfoColumns()
         {
-            var gridView = lmListView.ListView.View as GridView;
-            if (gridView != null)
+            if (lmListView.ListView.View is GridView gridView)
             {
                 for (var i = 1; i < 4; i++)
                 {
@@ -418,36 +415,6 @@ namespace Bluehands.Repository.Diagnostics
                 .Select(l => l[l.Count -1])
                 .ObserveOn(this)
                 .Subscribe(t => FilterColumn(t.column, t.pattern));
-        }
-
-        void TxtLevelFilterTextChanged(object sender, EventArgs e)
-        {
-            FilterColumn(LogViewer.LogColumnType.Level, txtLevelFilter.Text);
-        }
-
-        void TxtThreadIdFilterTextChanged(object sender, EventArgs e)
-        {
-            FilterColumn(LogViewer.LogColumnType.ThreadId, txtThreadIdFilter.Text);
-        }
-
-        void TxtInstanceFilterTextChanged(object sender, EventArgs e)
-        {
-            FilterColumn(LogViewer.LogColumnType.Instance, txtInstanceFilter.Text);
-        }
-
-        void TxtTimeFilterTextChanged(object sender, EventArgs e)
-        {
-            FilterColumn(LogViewer.LogColumnType.Time, txtTimeFilter.Text);
-        }
-
-        void TxtMessageFilterTextChanged(object sender, EventArgs e)
-        {
-            FilterColumn(LogViewer.LogColumnType.Message, txtMessageFilter.Text);
-        }
-
-        void TxtFilenameFilterTextChanged(object sender, EventArgs e)
-        {
-            FilterColumn(LogViewer.LogColumnType.Filename, txtFilenameFilter.Text);
         }
 
         void TxtLineNrTextChanged(object sender, EventArgs e)
@@ -751,22 +718,29 @@ namespace Bluehands.Repository.Diagnostics
                 if (!logFiles.Any())
                     return;
 
-                // ReSharper disable once AssignNullToNotNullAttribute
-                var outputFile = Path.Combine(Path.GetDirectoryName(logFiles[0]), Path.GetFileNameWithoutExtension(logFiles[0]) + "_merged.log");
-                if (File.Exists(outputFile))
-                    File.Delete(outputFile);
-
-                foreach (var logFile in logFiles)
-                {
-                    var lines = File.ReadLines(logFile).ToList();
-                    var logParser = new LogParser(FormatProviderFactory.GetLineConverter(lines, null));
-                    var parsedLines = logParser.ParseLines(lines, logFile, includeRaw: true);
-                    File.AppendAllLines(outputFile, parsedLines.Where(m_LogViewer.MatchesCurrentFilter).Select(l => l.RawMessage.ToString()));
-                }
+                MergeLogFilesWithCurrentFilter(logFiles);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($@"Failed: {ex}", @"Error");
+            }
+        }
+
+        void MergeLogFilesWithCurrentFilter(List<string> logFiles)
+        {
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var outputFile = Path.Combine(Path.GetDirectoryName(logFiles[0]),
+                Path.GetFileNameWithoutExtension(logFiles[0]) + "_merged.log");
+            if (File.Exists(outputFile))
+                File.Delete(outputFile);
+
+            foreach (var logFile in logFiles)
+            {
+                var lines = new LogFileInfo(logFile).Read(out _);
+                var logParser = new LogParser(FormatProviderFactory.GetLineConverter(lines, null));
+                var parsedLines = logParser.ParseLines(lines, logFile, includeRaw: true);
+                File.AppendAllLines(outputFile,
+                    parsedLines.Where(m_LogViewer.MatchesCurrentFilter).Select(l => l.RawMessage.ToString()));
             }
         }
     }

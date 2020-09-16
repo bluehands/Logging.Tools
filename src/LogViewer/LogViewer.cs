@@ -614,6 +614,11 @@ namespace Bluehands.Repository.Diagnostics
                     }
                     continue;
                 }
+
+                if (item != null)
+                {
+                    yield return item;
+                }
                 item = ParseLogLine(t, ref currentIndentionLevel, out var succeeded);
                 if (includeRaw) item.RawMessage.Append(t);
                 if (succeeded)
@@ -621,9 +626,13 @@ namespace Bluehands.Repository.Diagnostics
                     item.LineNr = previousLineCount + lineNr;
                     item.Filename = filename;
                     item.Highlighted = false;
-                    yield return item;
                     ++lineNr;
                 }
+            }
+
+            if (item != null)
+            {
+                yield return item;
             }
         }
 
