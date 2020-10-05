@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using Bluehands.Repository.Diagnostics.Properties;
 using static Bluehands.Repository.Diagnostics.LogFilters;
@@ -133,7 +134,8 @@ namespace Bluehands.Repository.Diagnostics
 
         ILogFormatProvider m_LogFormatProvider;
 
-        readonly StatePersister<LogViewerState> m_StatePersister = new StatePersister<LogViewerState>("LogViewerState.xml"); 
+        readonly StatePersister<LogViewerState> m_StatePersister = new StatePersister<LogViewerState>("LogViewerState.xml");
+        CancellationTokenSource m_LogPollCts;
 
         public enum LogColumnType
         {
@@ -211,6 +213,10 @@ namespace Bluehands.Repository.Diagnostics
                 fileSystemWatcher.Changed += LogFileChanged;
                 fileSystemWatcher.Deleted += LogFileChanged;
                 fileSystemWatcher.Created += LogFileChanged;
+                fileSystemWatcher.Error += (sender, args) =>
+                {
+                    Console.WriteLine("Error");
+                };
                 fileSystemWatcher.NotifyFilter = fileSystemWatcher.NotifyFilter | NotifyFilters.Size;
                 info.FileSystemWatcher = fileSystemWatcher;
                 fileSystemWatcher.EnableRaisingEvents = true;
@@ -295,6 +301,38 @@ namespace Bluehands.Repository.Diagnostics
                 return;
             }
             method.DynamicInvoke(args);
+        }
+
+        public void StartLogPoll()
+        {
+            StopLogPoll();
+
+            m_LogPollCts = new CancellationTokenSource();
+            var token = m_LogPollCts.Token;
+            Task.Run(async () =>
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
+                        ModifiedFilesExist(); //seems to trigger file watcher in certain situations
+                    }
+                    catch (TaskCanceledException)
+                    {
+                    }
+                }
+            }, token);
+        }
+
+        public void StopLogPoll()
+        {
+            if (m_LogPollCts != null)
+            {
+                m_LogPollCts.Cancel();
+                m_LogPollCts.Dispose();
+                m_LogPollCts = null;
+            }
         }
 
         public void RefreshCurrentLog()

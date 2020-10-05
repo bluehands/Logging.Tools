@@ -49,6 +49,7 @@
             this.toggleIndentionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleShowInfoColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiScrollDown = new System.Windows.Forms.ToolStripMenuItem();
+            this.pollLogForChangesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabLayout = new System.Windows.Forms.TableLayoutPanel();
             this.txtLineNr = new System.Windows.Forms.TextBox();
             this.txtThreadIdFilter = new System.Windows.Forms.TextBox();
@@ -150,7 +151,8 @@
             this.toolStripSeparator1,
             this.toggleIndentionToolStripMenuItem,
             this.toggleShowInfoColumnsToolStripMenuItem,
-            this.tsmiScrollDown});
+            this.tsmiScrollDown,
+            this.pollLogForChangesToolStripMenuItem});
             this.logToolStripMenuItem.Name = "logToolStripMenuItem";
             this.logToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.logToolStripMenuItem.Text = "&Log";
@@ -158,7 +160,7 @@
             // clearToolStripMenuItem
             // 
             this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
-            this.clearToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
             this.clearToolStripMenuItem.Text = "&Close all";
             this.clearToolStripMenuItem.Click += new System.EventHandler(this.ClearToolStripMenuItemClick);
             // 
@@ -166,7 +168,7 @@
             // 
             this.searchMenuItem.Name = "searchMenuItem";
             this.searchMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
-            this.searchMenuItem.Size = new System.Drawing.Size(261, 22);
+            this.searchMenuItem.Size = new System.Drawing.Size(260, 22);
             this.searchMenuItem.Text = "Find...";
             this.searchMenuItem.Click += new System.EventHandler(this.SearchMenuItemClick);
             // 
@@ -174,7 +176,7 @@
             // 
             this.findToolStripMenuItem.Name = "findToolStripMenuItem";
             this.findToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            this.findToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
+            this.findToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
             this.findToolStripMenuItem.Text = "Find &Next";
             this.findToolStripMenuItem.Click += new System.EventHandler(this.FindToolStripMenuItemClick);
             // 
@@ -182,7 +184,7 @@
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.F3)));
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(261, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(260, 22);
             this.toolStripMenuItem1.Text = "Find &Previous";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.FindPreviousToolStripMenuItemClick);
             // 
@@ -190,21 +192,21 @@
             // 
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
             this.refreshToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
             this.refreshToolStripMenuItem.Text = "&Refresh ";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.RefreshToolStripMenuItemClick);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(258, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(257, 6);
             // 
             // toggleIndentionToolStripMenuItem
             // 
             this.toggleIndentionToolStripMenuItem.CheckOnClick = true;
             this.toggleIndentionToolStripMenuItem.Name = "toggleIndentionToolStripMenuItem";
             this.toggleIndentionToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.toggleIndentionToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
+            this.toggleIndentionToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
             this.toggleIndentionToolStripMenuItem.Text = "&Indent Traces";
             this.toggleIndentionToolStripMenuItem.Click += new System.EventHandler(this.ToggleIndentionToolStripMenuItemClick);
             // 
@@ -213,7 +215,7 @@
             this.toggleShowInfoColumnsToolStripMenuItem.CheckOnClick = true;
             this.toggleShowInfoColumnsToolStripMenuItem.Name = "toggleShowInfoColumnsToolStripMenuItem";
             this.toggleShowInfoColumnsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.H)));
-            this.toggleShowInfoColumnsToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
+            this.toggleShowInfoColumnsToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
             this.toggleShowInfoColumnsToolStripMenuItem.Text = "&Hide info columns";
             this.toggleShowInfoColumnsToolStripMenuItem.Click += new System.EventHandler(this.ToggleShowInfoColumnsToolStripMenuItemClick);
             // 
@@ -222,9 +224,18 @@
             this.tsmiScrollDown.CheckOnClick = true;
             this.tsmiScrollDown.Name = "tsmiScrollDown";
             this.tsmiScrollDown.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D)));
-            this.tsmiScrollDown.Size = new System.Drawing.Size(261, 22);
+            this.tsmiScrollDown.Size = new System.Drawing.Size(260, 22);
             this.tsmiScrollDown.Text = "Always Scrolled Down (Tail)";
             this.tsmiScrollDown.CheckedChanged += new System.EventHandler(this.ScrollDownCheckedChanged);
+            // 
+            // pollLogForChangesToolStripMenuItem
+            // 
+            this.pollLogForChangesToolStripMenuItem.CheckOnClick = true;
+            this.pollLogForChangesToolStripMenuItem.Name = "pollLogForChangesToolStripMenuItem";
+            this.pollLogForChangesToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F5)));
+            this.pollLogForChangesToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
+            this.pollLogForChangesToolStripMenuItem.Text = "Poll log for changes";
+            this.pollLogForChangesToolStripMenuItem.CheckedChanged += new System.EventHandler(this.pollLogForChangesToolStripMenuItem_CheckedChanged);
             // 
             // tabLayout
             // 
@@ -424,6 +435,7 @@
         private System.Windows.Forms.ToolStripMenuItem searchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem mergeFilesWithCurrentFilterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem pollLogForChangesToolStripMenuItem;
     }
 }
 

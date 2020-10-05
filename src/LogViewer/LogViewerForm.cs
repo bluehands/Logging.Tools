@@ -66,6 +66,7 @@ namespace Bluehands.Repository.Diagnostics
             SetTitle(Path.GetFileName(m_StartUpFile));
             tsmiScrollDown.Checked = Settings.Default.AlwaysScrolledDown;
             toggleShowInfoColumnsToolStripMenuItem.Checked = Settings.Default.HideInfoColumns;
+            pollLogForChangesToolStripMenuItem.Checked = Settings.Default.PollLogFilesForChanges;
             if (Settings.Default.HideInfoColumns)
             {
                 ToggleShowInfoColumns();
@@ -571,6 +572,20 @@ namespace Bluehands.Repository.Diagnostics
                 ScrollDown();
             }
             Settings.Default.AlwaysScrolledDown = tsmiScrollDown.Checked;
+        }
+
+        void pollLogForChangesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            if (pollLogForChangesToolStripMenuItem.Checked)
+            {
+                m_LogViewer.StartLogPoll();
+            }
+            else
+            {
+                m_LogViewer.StopLogPoll();
+            }
+
+            Settings.Default.PollLogFilesForChanges = pollLogForChangesToolStripMenuItem.Checked;
         }
 
         void VisibleItemsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
