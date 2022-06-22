@@ -6,9 +6,9 @@ namespace Bluehands.Repository.Diagnostics
     //1772 001214991634 26.03.2010 07:01:54 Trace.    DocumentProcessor::CheckAuthentication	Enter
     public class LogBackendFormatProvider : LogCurrentFormatProvider
     {
-        private const string c_TraceLevelIdentifier = "Trace.";
-        private const string c_TraceEnterPattern = "Enter";
-        private const string c_TraceLeavePattern = "Leave:";
+	    const string c_TraceLevelIdentifier = "Trace.";
+	    const string c_TraceEnterPattern = "Enter";
+	    const string c_TraceLeavePattern = "Leave:";
 
         public override bool KnowsFormat(string line)
         {

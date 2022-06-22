@@ -4,7 +4,7 @@ namespace Bluehands.Repository.Diagnostics
 {
     public abstract class LogFormatProviderBase : ILogFormatProvider
     {
-        private CultureInfo m_CultureInfo;
+	    CultureInfo m_CultureInfo;
 
         protected LogFormatProviderBase()
             : this(CultureInfo.CreateSpecificCulture("de"))

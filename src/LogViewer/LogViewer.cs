@@ -311,27 +311,48 @@ namespace Bluehands.Repository.Diagnostics
             var token = m_LogPollCts.Token;
             Task.Run(async () =>
             {
-                while (!token.IsCancellationRequested)
+                try
                 {
-                    try
+                    while (!token.IsCancellationRequested)
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
-                        ModifiedFilesExist(); //seems to trigger file watcher in certain situations
+                        try
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
+                            try
+                            {
+                                ModifiedFilesExist(); //seems to trigger file watcher in certain situations
+                            }
+                            catch (Exception)
+                            {
+                                // ignored
+                            }
+                        }
+                        catch (TaskCanceledException)
+                        {
+                        }
                     }
-                    catch (TaskCanceledException)
-                    {
-                    }
+                }
+                catch (Exception)
+                {
+                    //ignored
                 }
             }, token);
         }
 
         public void StopLogPoll()
         {
-            if (m_LogPollCts != null)
+            try
             {
-                m_LogPollCts.Cancel();
-                m_LogPollCts.Dispose();
-                m_LogPollCts = null;
+                if (m_LogPollCts != null)
+                {
+                    m_LogPollCts.Cancel();
+                    m_LogPollCts.Dispose();
+                    m_LogPollCts = null;
+                }
+            }
+            catch (Exception)
+            {
+                //ignore
             }
         }
 

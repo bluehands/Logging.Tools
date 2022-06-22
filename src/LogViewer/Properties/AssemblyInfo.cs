@@ -1,16 +1,15 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("LogViewer")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("View, tail view and filter log files in a structured way")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("bluehands GmbH & Co.mmunication KG")]
 [assembly: AssemblyProduct("LogViewer")]
-[assembly: AssemblyCopyright("Copyright ©  bluehands 2008")]
+[assembly: AssemblyCopyright("Copyright © bluehands 2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.0.47")]
-[assembly: AssemblyFileVersion("1.1.0.47")]
+[assembly: AssemblyVersion("1.2.0.3")]
+[assembly: AssemblyFileVersion("1.2.0.3")]

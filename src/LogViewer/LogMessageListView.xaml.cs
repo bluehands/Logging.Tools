@@ -13,15 +13,15 @@ namespace Bluehands.Repository.Diagnostics
     /// </summary>
     public partial class LogMessageListView
     {
-        private GridViewColumnHeader sortColumn;
-        private ListSortDirection sortDirection = ListSortDirection.Ascending;
+	    GridViewColumnHeader sortColumn;
+	    ListSortDirection sortDirection = ListSortDirection.Ascending;
 
         public LogMessageListView()
         {
             InitializeComponent();
         }
 
-        private void GridViewColumnHeader_Clicked(object sender, RoutedEventArgs e)
+        void GridViewColumnHeader_Clicked(object sender, RoutedEventArgs e)
         {
             var headerClicked = e.OriginalSource as GridViewColumnHeader;
             if (headerClicked != null)
@@ -62,7 +62,7 @@ namespace Bluehands.Repository.Diagnostics
             }
         }
 
-        private void Sort(string sortBy)
+        void Sort(string sortBy)
         {
             ListCollectionView view = (ListCollectionView)CollectionViewSource.GetDefaultView(ListView.ItemsSource);
             switch (sortBy)
@@ -94,7 +94,7 @@ namespace Bluehands.Repository.Diagnostics
 
         internal abstract class LogListViewItemComparer : System.Collections.IComparer
         {
-            private readonly ListSortDirection sortOrder;
+	        readonly ListSortDirection sortOrder;
 
             protected LogListViewItemComparer()
             {
@@ -242,7 +242,7 @@ namespace Bluehands.Repository.Diagnostics
                 typeof(TextBoxHelper),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, SelectedTextChanged));
 
-        private static void SelectedTextChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        static void SelectedTextChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
             if (obj is TextBox tb)
             {

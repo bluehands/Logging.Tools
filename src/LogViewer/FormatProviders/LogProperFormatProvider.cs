@@ -6,8 +6,8 @@ namespace Bluehands.Repository.Diagnostics
 {
     public class LogProperFormatProvider : LogFormatProviderBase
     {
-        private const string c_TraceEnterPattern = "[Enter]";
-        private const string c_TraceLeavePattern = "[Leave]";
+	    const string c_TraceEnterPattern = "[Enter]";
+	    const string c_TraceLeavePattern = "[Leave]";
 
         public override bool IsNewLogLine(string line)
         {

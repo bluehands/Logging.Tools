@@ -19,7 +19,7 @@ namespace Bluehands.Repository.Diagnostics
             Application.Run(new LogViewerForm(startUpFile));
         }
 
-        private static string GetStartUpFilePath(string[] args)
+        static string GetStartUpFilePath(string[] args)
         {
             string startUpFile = null;
             if (args.Length > 0)

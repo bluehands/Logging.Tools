@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Bluehands.Repository.Diagnostics</RootNamespace>
     <AssemblyName>LogViewer</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <ManifestCertificateThumbprint>8CC75E1550621A5B48D169DF95CD55CC22253B02</ManifestCertificateThumbprint>
@@ -24,7 +24,7 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
-    <PublishUrl>publish\</PublishUrl>
+    <PublishUrl>C:\Temp\LogViewer\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -34,15 +34,18 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>true</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://project.bluehands.de/LogViewer/</InstallUrl>
-    <UpdateUrl>http://project.bluehands.de/LogViewer/</UpdateUrl>
-    <SupportUrl>http://bluehands.de</SupportUrl>
+    <InstallUrl>https://bluehandslogviewer.blob.core.windows.net/logviewer/</InstallUrl>
+    <UpdateUrl>https://bluehandslogviewer.blob.core.windows.net/logviewer/</UpdateUrl>
+    <SupportUrl>https://www.bluehands.de/</SupportUrl>
+    <ErrorReportUrl>https://www.bluehands.de/</ErrorReportUrl>
     <ProductName>LogViewer</ProductName>
     <PublisherName>bluehands GmbH &amp; Co.mmunication KG</PublisherName>
     <MinimumRequiredVersion>1.1.0.10</MinimumRequiredVersion>
+    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
+    <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>49</ApplicationRevision>
-    <ApplicationVersion>1.1.0.49</ApplicationVersion>
+    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationVersion>1.2.0.3</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -58,6 +61,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -69,6 +73,7 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Bluehands.Repository.Diagnostics.Log, Version=2.2.1.749, Culture=neutral, PublicKeyToken=714569f60f97f03b, processorArchitecture=MSIL">

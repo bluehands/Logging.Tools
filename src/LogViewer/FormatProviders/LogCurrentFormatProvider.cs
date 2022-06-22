@@ -6,7 +6,7 @@ namespace Bluehands.Repository.Diagnostics
 {
     public class LogCurrentFormatProvider : LogFormatProviderBase
     {
-        private const string c_TraceLeavePattern = "[Leave";
+	    const string c_TraceLeavePattern = "[Leave";
 
         public override bool IsNewLogLine(string line)
         {

@@ -13,6 +13,7 @@ namespace Bluehands.Repository.Diagnostics
             LogBackend,
             NLog,
             DateThreadIdMessage,
+            ScriptRunner,
             JustMessage
         }
 
@@ -30,6 +31,8 @@ namespace Bluehands.Repository.Diagnostics
                     return new NLogFormatProvider();
                 case FormatProviderType.DateThreadIdMessage:
                     return new DateThreadIdMessageFormatProvider();
+                case FormatProviderType.ScriptRunner:
+	                return new ScriptRunnerFormatProvider();
                 case FormatProviderType.JustMessage:
                     return new JustMessageFormatProvider();
                 default:

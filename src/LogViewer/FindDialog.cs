@@ -90,12 +90,12 @@ namespace Bluehands.Repository.Diagnostics
             Close();
         }
 
-        private void FindDialog_Load(object sender, EventArgs e)
+        void FindDialog_Load(object sender, EventArgs e)
         {
             KeyPreview = true;
         }
 
-        private void FindDialog_KeyDown(object sender, KeyEventArgs e)
+        void FindDialog_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.F3)
             {

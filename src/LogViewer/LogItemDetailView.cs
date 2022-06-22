@@ -16,7 +16,7 @@ namespace Bluehands.Repository.Diagnostics
             m_Output.Text = text;
         }
 
-        private void LogItemDetailView_KeyUp(object sender, KeyEventArgs e)
+        void LogItemDetailView_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
             {
