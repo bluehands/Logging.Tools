@@ -17,7 +17,7 @@ public class ScriptRunnerFormatProvider : LogFormatProviderBase
 	}
 
 
-	static readonly Regex s_LineRegex = new(@"(?'date'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[(?'threaId'\d+|\w*\s#\d+)\s*:(?'logger'[^:]*):(?'level'[^(\s|\])]*)(\s|\])*(?'message'.*)",
+	static readonly Regex s_LineRegex = new(@"(?'date'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[(?'threaId'\d+|[^:]*)\s*:(?'logger'[^:]*):(?'level'[^(\s|\])]*)(\s|\])*(?'message'.*)",
 		RegexOptions.Compiled);
 
 	public override LogListViewItem Convert(string line, out bool succeeded)

@@ -700,12 +700,12 @@ namespace Bluehands.Repository.Diagnostics
         {
             var item = m_LogFormatProvider.Convert(line, out succeeded);
 
-            if (m_LogFormatProvider.IsTraceEnter(item))
+            if (succeeded && m_LogFormatProvider.IsTraceEnter(item))
             {
                 item.TraceIndentLevel = currentIndentionLevel;
                 ++currentIndentionLevel;
             }
-            else if ((m_LogFormatProvider.IsTraceLeave(item) && currentIndentionLevel > 0))
+            else if (succeeded && m_LogFormatProvider.IsTraceLeave(item) && currentIndentionLevel > 0)
             {
                 --currentIndentionLevel;
                 item.TraceIndentLevel = currentIndentionLevel;
@@ -714,8 +714,6 @@ namespace Bluehands.Repository.Diagnostics
             {
                 item.TraceIndentLevel = currentIndentionLevel;
             }
-
-            succeeded = true;
 
             return item;
         }
