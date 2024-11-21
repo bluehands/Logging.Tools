@@ -749,14 +749,18 @@ namespace Bluehands.Repository.Diagnostics
             if (File.Exists(outputFile))
                 File.Delete(outputFile);
 
-            foreach (var logFile in logFiles)
-            {
-                var lines = new LogFileInfo(logFile).Read(out _);
-                var logParser = new LogParser(FormatProviderFactory.GetLineConverter(lines, null));
-                var parsedLines = logParser.ParseLines(lines, logFile, includeRaw: true);
-                File.AppendAllLines(outputFile,
-                    parsedLines.Where(m_LogViewer.MatchesCurrentFilter).Select(l => l.RawMessage.ToString()));
-            }
+            var logLines = logFiles.SelectMany(logFile =>
+                {
+                    var lines = new LogFileInfo(logFile).Read(out _);
+                    var logParser = new LogParser(FormatProviderFactory.GetLineConverter(lines, null));
+                    var parsedLines = logParser.ParseLines(lines, logFile, includeRaw: true);
+                    return parsedLines;
+                })
+                .Where(m_LogViewer.MatchesCurrentFilter)
+                .OrderBy(l => l.Time)
+                .Select(l => l.RawMessage.ToString());
+
+            File.WriteAllLines(outputFile, logLines);
         }
     }
 
